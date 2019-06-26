@@ -9,7 +9,11 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import org.jgrapht.Graph;
+import org.jgrapht.graph.DefaultEdge;
+
 import it.polito.tdp.gestionale.model.Corso;
+import it.polito.tdp.gestionale.model.Nodo;
 import it.polito.tdp.gestionale.model.Studente;
 
 public class DidatticaDAO {
@@ -50,7 +54,7 @@ public class DidatticaDAO {
 	/*
 	 * Ottengo tutti i corsi salvati nel Db
 	 */
-	public List<Corso> getTuttiICorsi() {
+	public List<Corso> getTuttiICorsi(Map<String, Corso> corsoMap) {
 
 		final String sql = "SELECT * FROM corso";
 
@@ -65,7 +69,11 @@ public class DidatticaDAO {
 			while (rs.next()) {
 
 				Corso s = new Corso(rs.getString("codins"), rs.getInt("crediti"), rs.getString("nome"), rs.getInt("pd"));
-				corsi.add(s);
+				if(!corsoMap.containsKey(s.getCodins())) {
+				
+					corsoMap.put(s.getCodins(), s);
+					corsi.add(s);
+				}
 			}
 
 			return corsi;
@@ -79,7 +87,7 @@ public class DidatticaDAO {
 	/*
 	 * Ottengo tutti gli studenti salvati nel Db
 	 */
-	public List<Studente> getTuttiStudenti() {
+	public List<Studente> getTuttiStudenti(Map<Integer, Studente> studentiMap) {
 
 		final String sql = "SELECT * FROM studente";
 
@@ -94,7 +102,9 @@ public class DidatticaDAO {
 			while (rs.next()) {
 
 				Studente s = new Studente(rs.getInt("matricola"), rs.getString("cognome"), rs.getString("nome"), rs.getString("CDS"));
-				studenti.add(s);
+				if(!studentiMap.containsKey(s.getMatricola())) {
+				    studentiMap.put(s.getMatricola(), s);
+					studenti.add(s);}
 			}
 
 			return studenti;
@@ -103,6 +113,41 @@ public class DidatticaDAO {
 			// e.printStackTrace();
 			throw new RuntimeException("Errore Db");
 		}
+	}
+
+	public void loadEdges(Graph<Nodo, DefaultEdge> grafo, Map<String, Corso> corsoMap,
+			Map<Integer, Studente> studentiMap) {
+
+		String sql = "SELECT * FROM iscrizione";
+	
+		try {
+			Connection conn = ConnectDB.getConnection();
+			PreparedStatement st = conn.prepareStatement(sql);
+			ResultSet rs = st.executeQuery();
+
+			while (rs.next()) {
+				
+				if(studentiMap.containsKey(rs.getInt("matricola")) && corsoMap.containsKey(rs.getString("codins"))) {
+					
+					Studente s  = studentiMap.get(rs.getInt("matricola"));
+					Corso c = corsoMap.get(rs.getString("codins"));
+					
+					c.aggiungiStudente(s);
+					s.aggiungiCorso(c);
+					
+				    grafo.addEdge(s, c);
+					
+				}
+				
+			}
+
+			
+
+		} catch (SQLException e) {
+			// e.printStackTrace();
+			throw new RuntimeException("Errore Db");
+		}
+		
 	}
 
 }

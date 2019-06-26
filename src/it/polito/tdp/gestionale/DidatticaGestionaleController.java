@@ -10,6 +10,10 @@ import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 
 public class DidatticaGestionaleController {
+	
+	/*
+	 * Tema di esame un po' troppo vecchio stile
+	 */
 
 	private Model model;
 
@@ -28,7 +32,7 @@ public class DidatticaGestionaleController {
 	@FXML
 	void doCorsiFrequentati(ActionEvent event) {
 		txtResult.clear();
-		txtResult.setText("premuto Corsi Frequentati");
+		txtResult.setText(model.getCorsiFrequentati());
 	}
 	
 	@FXML
